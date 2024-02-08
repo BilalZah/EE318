@@ -1,0 +1,24 @@
+
+**** Build of configuration Debug for project Wind Speed ****
+
+"C:\\ti\\ccs1210\\ccs\\utils\\bin\\gmake" -k -j 12 all -O 
+ 
+Building file: "../main.c"
+Invoking: MSP430 Compiler
+"C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-msp430_21.6.0.LTS/bin/cl430" -vmspx --use_hw_mpy=none --include_path="C:/ti/ccs1210/ccs/ccs_base/msp430/include" --include_path="C:/Users/Temp/workspace_v12/Wind Speed" --include_path="C:/ti/ccs1210/ccs/tools/compiler/ti-cgt-msp430_21.6.0.LTS/include" --advice:power=all --advice:hw_config=all --define=__MSP430FR4133__ -g --printf_support=minimal --diag_warning=225 --diag_wrap=off --display_error_number --silicon_errata=CPU21 --silicon_errata=CPU22 --silicon_errata=CPU40 --preproc_with_compile --preproc_dependency="main.d_raw"  "../main.c"
+ 
+>> Compilation failure
+subdir_rules.mk:9: recipe for target 'main.obj' failed
+"../main.c", line 16: error #20: identifier "TB0CTL" is undefined
+"../main.c", line 16: error #20: identifier "TBSSEL__SMCLK" is undefined
+"../main.c", line 17: error #20: identifier "TB0CCR0" is undefined
+"../main.c", line 18: error #20: identifier "TB0CCR1" is undefined
+"../main.c", line 19: error #20: identifier "TB0CCTL1" is undefined
+"../main.c", line 27: error #20: identifier "TB0CCR1" is undefined
+"../main.c", line 37: remark #1527-D: (ULP 2.1) Detected SW delay loop using __delay_cycles. Recommend using a timer module instead
+"../main.c", line 39: remark #1527-D: (ULP 2.1) Detected SW delay loop using __delay_cycles. Recommend using a timer module instead
+6 errors detected in the compilation of "../main.c".
+gmake: *** [main.obj] Error 1
+gmake: Target 'all' not remade because of errors.
+
+**** Build Finished ****
