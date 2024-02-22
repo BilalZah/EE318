@@ -1,40 +1,46 @@
 #include <msp430.h>
 #include <driverlib.h>
 #include <Board.h>
+#include <msp430.h>
+#include "lcd.h" // Include your LCD library here
 
+#define MOTOR_VOLTAGE_CHANNEL INCH_0 // ADC channel for voltage measurement
+#define LOAD_RESISTANCE 100.0 // Load resistance in ohms for power calculation
 
-
-void setupPWM() {
-    // Example assumes PWM output on a pin like P1.2. Adjust according to your actual setup.
-    P1DIR |= BIT2; // Set pin as output - adjust BIT2 according to your PWM output pin
-    // Assuming using TA0.1 for PWM, adjust based on your timer and channel
-    TA0CCTL1 = OUTMOD_7; // Reset/Set mode
-    TA0CTL = TASSEL_2 + MC_1; // SMCLK, Up mode
-    TA0CCR0 = 1000 - 1; // PWM Period
-    TA0CCR1 = 500; // PWM Duty Cycle 50%, adjust for initial speed
-
-    // Enable PWM output on the correct pin, adjusting for your MSP430 model and desired output pin
-    // This often involves setting a pin selection register to connect the timer output to the pin
-    // For example, if using P1.2 and the specific MSP430 model uses PxSEL register:
-    // P1SEL |= BIT2; // Uncomment and adjust this line according to your model and pin
+void initADC(void) {
+    ADC10CTL0 = SREF_0 + ADC10SHT_2 + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled
+    ADC10CTL1 = MOTOR_VOLTAGE_CHANNEL; // Set input channel
+    __enable_interrupt(); // Enable general interrupts
 }
 
-void setFanSpeed(unsigned int speed) {
-    if (speed > 100) speed = 100;
-    TA0CCR1 = (TA0CCR0 + 1) * speed / 100 - 1;
+void displayPower(float power) {
+    char buffer[16];
+    sprintf(buffer, "Power: %.2f W", power);
+    lcd_clear();
+    lcd_print(buffer); // Use your LCD's print function
 }
 
-int main(void) {
-    WDTCTL = WDTPW | WDTHOLD; // Stop watchdog timer
-    setupPWM(); // Setup PWM
+void main(void) {
+    WDTCTL = WDTPW + WDTHOLD; // Stop watchdog timer
+    initADC(); // Initialize ADC for voltage measurement
+    lcd_init(); // Initialize your LCD (Assuming your LCD library has an init function)
 
-    unsigned int speed = 0; // Ensure speed is declared and initialized before the loop
     while(1) {
-        for(speed = 0; speed <= 100; speed += 10) {
-            setFanSpeed(speed); // Set fan speed
-            __delay_cycles(1000000); // Delay to observe change
-        }
+        ADC10CTL0 |= ENC + ADC10SC; // Sampling and conversion start
+        __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ interrupt
+
+        // ADC10MEM contains the converted value once ADC10SC is cleared
+        float voltage = (ADC10MEM * 3.3) / 1023; // Convert ADC value to voltage assuming 3.3V reference
+        float power = (voltage * voltage) / LOAD_RESISTANCE; // P=V^2/R
+
+        displayPower(power); // Display the calculated power on the LCD
     }
+}
+
+// ADC10 interrupt service routine
+#pragma vector=ADC10_VECTOR
+__interrupt void ADC10_ISR(void) {
+    __bic_SR_register_on_exit(CPUOFF); // Clear CPUOFF bit from 0(SR)
 }
 
 
