@@ -1,0 +1,60 @@
+#include <msp430.h>
+#include <driverlib.h>
+#include <Board.h>
+//#include <lcd.h>
+
+// Assuming GPIO_PORT_ADC7 and GPIO_PIN_ADC7 for voltage measurement
+#define ADC_INPUT_CHANNEL ADCINCH_7  // ADC input channel for P1.7
+
+void initADC(void) {
+    // Configure P1.7 for ADC input
+    P1SEL1 |= GPIO_PIN_ADC7;
+    P1SEL0 |= GPIO_PIN_ADC7;
+
+    // Initialize ADC
+    ADCCTL0 &= ~ADCSHT;
+    ADCCTL0 |= ADCSHT_2 + ADCON;  // ADC ON, Sampling time
+    ADCCTL1 |= ADCSHP;            // ADC clock source = sampling timer
+    ADCCTL2 &= ~ADCRES;           // Clear ADCRES in ADCCTL
+    ADCCTL2 |= ADCRES_2;          // 12-bit conversion results
+    ADCMCTL0 |= ADC_INPUT_CHANNEL; // Configure ADC input channel
+
+    ADCIE |= ADCIE0;              // Enable ADC conversion complete interrupt
+    __enable_interrupt();         // Enable global interrupt
+}
+
+void main(void) {
+    WDTCTL = WDTPW + WDTHOLD; // Stop watchdog timer
+    initADC();                // Initialize ADC for voltage measurement
+    lcd_init();               // Initialize your LCD (specific to your LCD module)
+
+    while(1) {
+        ADCCTL0 |= ADCENC | ADCSC;    // Start sampling and conversion
+
+        __bis_SR_register(LPM0_bits + GIE); // Enter LPM0, ADC_ISR will force exit
+
+        // ADCMEM0 contains the converted value once ADC conversion is complete
+        float voltage = (ADCMEM0 * 3.3) / 4095; // Convert ADC value to voltage
+        float power = (voltage * voltage) / LOAD_RESISTANCE; // P=V^2/R
+
+        lcd_clear();               // Clear LCD display
+        lcd_print_power(power);    // Display the calculated power on the LCD
+    }
+}
+
+// ADC interrupt service routine
+#pragma vector=ADC_VECTOR
+__interrupt void ADC_ISR(void) {
+    switch(__even_in_range(ADCIV,ADCIV_ADCIFG)) {
+        case ADCIV_ADCIFG: // When conversion is complete
+            __bic_SR_register_on_exit(LPM0_bits); // Exit LPM0
+            break;
+        default: break;
+    }
+}
+
+// Implement lcd_init, lcd_clear, lcd_print_power based on your LCD's interface
+
+
+
+

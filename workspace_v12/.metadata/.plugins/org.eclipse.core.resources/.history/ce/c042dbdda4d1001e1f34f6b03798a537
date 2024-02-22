@@ -1,0 +1,47 @@
+#include <msp430.h>
+#include <driverlib.h>
+#include <Board.h>
+#include <msp430.h>
+#include "lcd.h" // Include your LCD library here
+
+#define MOTOR_VOLTAGE_CHANNEL INCH_0 // ADC channel for voltage measurement
+#define LOAD_RESISTANCE 100.0 // Load resistance in ohms for power calculation
+
+void initADC(void) {
+    ADC10CTL0 = SREF_0 + ADC10SHT_2 + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled
+    ADC10CTL1 = MOTOR_VOLTAGE_CHANNEL; // Set input channel
+    __enable_interrupt(); // Enable general interrupts
+}
+
+void displayPower(float power) {
+    char buffer[16];
+    sprintf(buffer, "Power: %.2f W", power);
+    lcd_clear();
+    lcd_print(buffer); // Use your LCD's print function
+}
+
+void main(void) {
+    WDTCTL = WDTPW + WDTHOLD; // Stop watchdog timer
+    initADC(); // Initialize ADC for voltage measurement
+    lcd_init(); // Initialize your LCD (Assuming your LCD library has an init function)
+
+    while(1) {
+        ADC10CTL0 |= ENC + ADC10SC; // Sampling and conversion start
+        __bis_SR_register(CPUOFF + GIE); // Enter LPM0 w/ interrupt
+
+        // ADC10MEM contains the converted value once ADC10SC is cleared
+        float voltage = (ADC10MEM * 3.3) / 1023; // Convert ADC value to voltage assuming 3.3V reference
+        float power = (voltage * voltage) / LOAD_RESISTANCE; // P=V^2/R
+
+        displayPower(power); // Display the calculated power on the LCD
+    }
+}
+
+// ADC10 interrupt service routine
+#pragma vector=ADC10_VECTOR
+__interrupt void ADC10_ISR(void) {
+    __bic_SR_register_on_exit(CPUOFF); // Clear CPUOFF bit from 0(SR)
+}
+
+
+

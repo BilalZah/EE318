@@ -10,10 +10,8 @@
 
 void initADC(void) {
     // Configure P1.7 for ADC input
-    // Configure P1.7 for ADC input
-    P1SEL0 |= BIT7; // Corrected from PASEL0_L to P1SEL0
-    P1SEL1 |= BIT7; // Corrected from PASEL1_L to P1SEL1
-
+    P1SEL0 |= BIT7; // Set P1.7 to function mode for ADC input
+    P1SEL1 |= BIT7;
 
     // Initialize ADC
     ADCCTL0 = ADCSHT_2 + ADCON; // ADC ON, Sampling time
@@ -61,7 +59,7 @@ __interrupt void ADC_ISR(void) {
     //char powerStr[16];
     //sprintf(powerStr, "Power: %.2fW", power);
    // lcd_print(powerStr);
-//}
+}
 
 
 
