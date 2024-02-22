@@ -10,6 +10,7 @@
 
 void initADC(void) {
     // Configure P1.7 for ADC input
+    // Configure P1.7 for ADC input
     P1SEL0 |= BIT7; // Corrected from PASEL0_L to P1SEL0
     P1SEL1 |= BIT7; // Corrected from PASEL1_L to P1SEL1
 
@@ -27,7 +28,7 @@ void initADC(void) {
 void main(void) {
     WDTCTL = WDTPW + WDTHOLD; // Stop watchdog timer
     initADC(); // Initialize ADC for voltage measurement
-    lcd_init(); // Initialize your LCD
+    lcd_init(); // Initialize your
 
     while(1) {
         ADCCTL0 |= ADCENC | ADCSC; // Start sampling and conversion
